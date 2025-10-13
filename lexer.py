@@ -1,108 +1,166 @@
-TABLA_TOKENS = {
-    'int':4, # Tipo
-    'float':4,
-    'char':4,
-    'void':4,
-    '+':5, # Operador suma
-    '-':5,
-    '*':6, # Operador multiplicacion
-    '/':6, 
-    '<':7, # Operador relacional
-    '<=':7,
-    '>=':7,
-    '>':7,
-    'opOR':8, # Operador OR
-    '&&':9, # Operador AND
-    '!':10, # Operador NOT
-    '==':11, # Operador Igualdad
-    '!=':11, 
-    ';':12, # Punto y coma
-    ',':13, # Coma
-    '(':14, # Parentesis (apertura)
-    ')':15, # Parentesis (cierre)
-    '{':16, # Corchete (apertura)
-    '}':17, # Corchete (cierre)
-    '=':18, # Operador asignacion
-    'if':19, # if
-    'while':20, #while
-    'return':21, #return
-    'else':22, #else
-    #'$':23,#Solo se incluye al final de las cadenas para indicar el final
-    'error':-1 # Error
-}
+#FUNCION PARA ANALIZAR
+def analizador_lexico(codigo):
+    resultado = ''
+    posicion = 0
+    error = False
 
-def lexer(cadena):
-    tokens = []
-    i = 0
-    while i < len(cadena):
-        c = cadena[i]
+    while posicion < len(codigo):
+        char = codigo[posicion]
+        #AVANZAR EN ESPACIOS EN BLANCO
+        if char == " ":
+            posicion += 1
+        #IDENTIFICADORES
+        elif char.isalpha() or char == '_' or char == '"': #ISALPHA PARA LETRAS O _
+            identificador = ''
+            while posicion < len(codigo) and (codigo[posicion].isalnum() or codigo[posicion] == "_" or codigo[posicion] == '"'):
+                identificador += codigo[posicion]
+                posicion += 1
+                
+            #19 CONDICIONAL if   
+            if identificador == "if":
+                resultado += identificador + " -> 19, Reservada if \n"
+            
+            #20 while   
+            elif identificador == "while":
+                resultado += identificador + " -> 20, Reservada while \n"
 
-        # Ignorar espacios
-        if c.isspace():
-            i += 1
-            continue
+            #21 return  
+            elif identificador == "return":
+                resultado += identificador + " -> 21, Reservada return \n"
 
-        #Identicadores/palabras reservadas/tipos
-        if c.isalpha() or c == '_':
-            lexema = c
-            i += 1
-            while i < len(cadena) and (cadena[i].isalnum() or cadena[i] == '_'):
-                lexema += cadena[i]
-                i += 1
+            #22 else  
+            elif identificador == "else":
+                resultado += identificador + " -> 22, Reservada else \n"
 
-            if lexema in TABLA_TOKENS:
-                tokens.append((lexema, TABLA_TOKENS[lexema]))
+            #3 CADENA
+            elif '"' in identificador:
+                resultado += identificador + " -> 3, cadena \n"
+
+            #4 TIPOS DE DATOS
+            elif identificador == "int" or identificador == "float" or identificador == "string":
+                resultado += identificador + " -> 4, tipo de dato \n"
+
+            #0 IDENTIFICADOR
             else:
-                tokens.append((lexema, 0))  # Identificador
-            continue
+                resultado += identificador + " -> 0, identificador \n"
+       
+        #DIGITOS
+        elif char.isdigit() or char==".":
+            numero = ""    
+            while posicion < len(codigo) and (codigo[posicion].isdigit() or codigo[posicion] =="."):
+                if codigo[posicion].isalnum():
+                    numero += codigo[posicion]    
+                elif codigo[posicion] ==".":
+                    numero += codigo[posicion]
+                posicion += 1
+                
+            #2 FLOTANTE
+            if "." in numero:
+                token = " -> 2, flotante \n"
+                
+            #1 ENTERO
+            else:
+                token = " -> 1, entero \n"
+            resultado += numero +  token
 
-        #Números (enteros / reales)
-        if c.isdigit():
-            lexema = c
-            i += 1
-            es_real = False
-            while i < len(cadena) and (cadena[i].isdigit() or cadena[i] == '.'):
-                if cadena[i] == '.':
-                    if es_real:  # segundo punto = error
-                        break
-                    es_real = True
-                lexema += cadena[i]
-                i += 1
+        #5 OPSUMA
+        elif char == "+" or char == "-":
+            resultado += char + " -> 5, opsuma \n"
+            posicion += 1
+            
+        #6 OPMULTIPLICACION
+        elif char == "*" or char == "/":
+            resultado += char + " -> 6, opmultiplicacion \n"
+            posicion += 1
 
-            tokens.append((lexema, 2 if es_real else 1))
-            continue
+        #7 OPRELACION
+        elif char == "<" or char == ">":
+            res_aux = char + " -> 7, oprelacion \n"
+            aux = char
+            posicion +=1
+            char = codigo[posicion]
+            if char == "=":
+                res_aux = aux + char + " -> 7, oprelacion \n"
+                posicion +=1
+            resultado += res_aux
 
-        # --- Cadenas ---
-        if c == '"':
-            lexema = c
-            i += 1
-            while i < len(cadena) and cadena[i] != '"':
-                lexema += cadena[i]
-                i += 1
-            if i < len(cadena):
-                lexema += '"'  # cerrar comillas
-                i += 1
-            tokens.append((lexema, 3))
-            continue
+        #8 OPOR
+        elif char == "|":
+            posicion +=1
+            aux = char
+            char = codigo[posicion]
+            if char == "|":
+                resultado += aux + char + " -> 8, opor \n"
+                posicion +=1
 
-        # --- Operadores y símbolos ---
-        # Intentar leer de 2 caracteres primero (ej: <=, >=, ==, !=, &&, ||)
-        if i + 1 < len(cadena) and cadena[i:i+2] in TABLA_TOKENS:
-            lexema = cadena[i:i+2]
-            tokens.append((lexema, TABLA_TOKENS[lexema]))
-            i += 2
-            continue
+        #9 OPAND
+        elif char == "&":
+            posicion +=1
+            aux = char
+            char = codigo[posicion]
+            if char == "&":
+                resultado += aux + char + " -> 9, opand \n"
+                posicion +=1
 
-        # De 1 carácter
-        if c in TABLA_TOKENS:
-            tokens.append((c, TABLA_TOKENS[c]))
-            i += 1
-            continue
+        #IGUALDADES
+        elif char == "=" or char == "!":
+            #18 =
+            if char == "=":
+                posicion +=1
+                aux = char
+                res_aux = char + " -> 18, = \n"
+                char = codigo[posicion]
+                #11 OPIGUALDAD
+                if char == "=":
+                    res_aux = aux + char + " -> 11, opigualdad \n"
+                    posicion += 1
+            #10 OPNOT
+            elif char == "!":
+                posicion +=1
+                aux = char
+                res_aux = char + " -> 10, opnot \n"
+                char = codigo[posicion]
+                #11 OPIGUALDAD
+                if char == "=":
+                    res_aux = aux + char + " -> 11, opigualdad \n"
+                    posicion += 1
+            resultado += res_aux
 
-        # Si nada coincidió → error
-        tokens.append((c, -1))
-        i += 1
+        #12 ;
+        elif char == ";":
+            resultado += char + " -> 12, ; \n"
+            posicion += 1
 
-    return tokens
+        #13 ,
+        elif char == ",":
+            resultado += char + " -> 13, , \n"
+            posicion += 1
 
-print(lexer("int var = 10; $"))
+        #14 (
+        elif char == "(":
+            resultado += char + " -> 14, ( \n"
+            posicion += 1
+
+        #15 )
+        elif char == ")":
+            resultado += char + " -> 15, ) \n"
+            posicion += 1
+
+        #16 {
+        elif char == "{":
+            resultado += char + " -> 16, { \n"
+            posicion += 1
+
+        #17 }
+        elif char == "}":
+            resultado += char + " -> 17, } \n"
+            posicion += 1
+  
+        #TOKEN NO RECONOCIDO
+        else:
+            print("DEBUG: carácter no reconocido ->", repr(char))
+            error = True
+            resultado = "Token no reconocido: " + char
+            posicion = len(codigo)   
+
+    return resultado, not error
