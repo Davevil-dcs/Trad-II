@@ -48,6 +48,8 @@ from .analisis import lexer
 from .analisis import lista
 from .analisis import parser
 ```
+#Autor
 
+David Alejandro Villa González
 
 
