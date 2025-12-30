@@ -1,7 +1,7 @@
 
 [![Análisis léxico y sintáctico](Presentacion/port.png)](analisis/parser.py)
 
-#Introducción al análisis láxico y sintáctico
+#Introducción al análisis léxico y sintáctico
 
 Este proyecto implementa un analizador léxico y un analizador sintáctico basados en una gramática definida como complementos para un futuro compilador.
 
